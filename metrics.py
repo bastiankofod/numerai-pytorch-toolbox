@@ -9,10 +9,6 @@ def sharpe(x):
     return x.mean() / x.std()
 
 
-def numerai_sharpe(x):
-    return (x.mean() - 0.010415154) / x.std()
-
-
 def skew(x):
     mx = x.mean()
     m2 = ((x-mx)**2).mean()
@@ -27,39 +23,35 @@ def kurtosis(x):
     return (m4 / (m2**2)) - 3
 
 
-def adj_sharpe(x, sharpe_f):
-    return sharpe_f(x) * (1 + ((skew(x) / 6) * sharpe_f(x)) - ((kurtosis(x) / 24) * (sharpe_f(x)**2)))
+def adj_sharpe(x):
+    return sharpe(x) * (1 + ((skew(x) / 6) * sharpe(x)) - ((kurtosis(x) / 24) * (sharpe(x)**2)))
 
 
 def lpm(r, t, o):
-    rt = t - r
-    return torch.sum(torch.minimum(torch.tensor(1e-7), rt) ** o) / len(rt)
+    rt = r - t
+    return torch.abs(torch.minimum(torch.tensor(1e-7), rt) ** o).mean()
 
 
 def hpm(r, t, o):
     rt = r - t
-    return torch.sum(torch.minimum(torch.tensor(1e-7), rt) ** o) / len(rt)
+    return torch.abs(torch.maximum(torch.tensor(1e-7), rt) ** o).mean()
 
 
 def sortino(x, t=0.010415154):
-    return x.mean() / torch.sqrt(lpm(x, t, 2))
-
-
-def numerai_sortino(x, t=0.010415154):
     xt = x - t
     return xt.mean() / torch.sqrt(lpm(x, t, 2))
 
 
-def kappa_three(x, t=0.010415154):
+def kappa_three(x, t=1e-7):
     l = lpm(x, t, 3)
-    return x.mean() / torch.pow(torch.abs(l), float(1/3))
+    return x.mean() / torch.sign(l) * (torch.pow(torch.abs(l), float(1/3)))
 
 
-def gain_loss_ratio(x, t=0.010415154):
+def gain_loss_ratio(x, t=1e-7):
     return hpm(x, t, 1) / lpm(x, t, 1)
 
 
-def upside_potential_ratio(x, t=0.010415154):
+def upside_potential_ratio(x, t=1e-7):
     return hpm(x, t, 1) / torch.sqrt(lpm(x, t, 2))
 
 
