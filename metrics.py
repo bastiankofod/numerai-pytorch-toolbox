@@ -37,14 +37,16 @@ def hpm(r, t, o):
     return torch.abs(torch.maximum(torch.tensor(1e-7), rt) ** o).mean()
 
 
-def sortino(x, t=0.010415154):
-    xt = x - t
-    return xt.mean() / torch.sqrt(lpm(x, t, 2))
+def omega(x, t=1e-7):
+    return x.mean() / lpm(x, t, 1)
+
+
+def sortino(x, t=1e-7):
+    return x.mean() / torch.sqrt(lpm(x, t, 2))
 
 
 def kappa_three(x, t=1e-7):
-    l = lpm(x, t, 3)
-    return x.mean() / torch.sign(l) * (torch.pow(torch.abs(l), float(1/3)))
+    return x.mean() / torch.pow(lpm(x, t, 3), float(1/3))
 
 
 def gain_loss_ratio(x, t=1e-7):
